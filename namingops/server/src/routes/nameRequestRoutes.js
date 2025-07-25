@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Create a temporary uploads directory if it doesn't exist
     const uploadDir = path.join(process.cwd(), 'temp-uploads');
-    require('fs').mkdirSync(uploadDir, { recursive: true });
+    require('fs').mkdirSync(uploadDir, { recursive });
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 });
 
 // File filter to accept only certain file types
-const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (req, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -61,7 +61,7 @@ router
       // Handle multer errors
       if (req.fileValidationError) {
         return res.status(400).json({
-          success: false,
+          success,
           message: req.fileValidationError
         });
       }

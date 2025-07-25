@@ -56,6 +56,15 @@ exports = async function(changeEvent) {
     console.log(`Confirmation email sent to ${userEmail} for request ${nameRequest._id}`);
   } catch (error) {
     console.error('Error sending confirmation email:', error);
-    // You might want to log this to an error tracking service
+    
+    // Log the error to a collection for failed emails
+    const db = context.services.get('mongodb-atlas').db('namingops');
+    await db.collection('failedEmails').insertOne({
+      type: 'confirmation',
+      recipient: userEmail,
+      requestId: nameRequest._id,
+      error: error.message,
+      timestamp: new Date()
+    });
   }
 };

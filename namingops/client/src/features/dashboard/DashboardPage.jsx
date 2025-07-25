@@ -14,21 +14,16 @@ import {
   useTheme
 } from '@mui/material';
 import {
-  Assignment as AssignmentIcon,
-  CheckCircle as CheckCircleIcon,
-  Pending as PendingIcon,
-  Error as ErrorIcon,
-  Add as AddIcon
+  Assignment,
+  CheckCircle,
+  Pending,
+  Error,
+  Add
 } from '@mui/icons-material';
 import { AppDispatch, RootState } from '../../app/store';
 import { fetchNameRequests } from '../nameRequests/nameRequestSlice';
 
-const StatCard: React.FC<{
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  color: string;
-  onClick?: () => void;
+const StatCard:  void;
 }> = ({ title, value, icon, color, onClick }) => (
   <Card 
     sx={{ 
@@ -37,7 +32,7 @@ const StatCard: React.FC<{
       transition: 'transform 0.2s, box-shadow 0.2s',
       '&:hover': {
         transform: 'translateY(-4px)',
-        boxShadow: 6,
+        boxShadow,
       },
     }}
     onClick={onClick}
@@ -56,12 +51,12 @@ const StatCard: React.FC<{
           sx={{
             backgroundColor: `${color}20`,
             borderRadius: '50%',
-            width: 56,
-            height: 56,
+            width,
+            height,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: color,
+            color,
           }}
         >
           {icon}
@@ -72,7 +67,7 @@ const StatCard: React.FC<{
 );
 
 const DashboardPage: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
   
@@ -81,7 +76,7 @@ const DashboardPage: React.FC = () => {
     loading, 
     stats,
     currentUser 
-  } = useSelector((state: RootState) => ({
+  } = useSelector((state) => ({
     nameRequests: state.nameRequests.nameRequests.slice(0, 5), // Get only the first 5 requests
     loading: state.nameRequests.loading,
     stats: state.nameRequests.stats,
@@ -126,7 +121,7 @@ const DashboardPage: React.FC = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
             title="Total Requests"
@@ -168,7 +163,7 @@ const DashboardPage: React.FC = () => {
       {/* Recent Requests */}
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper sx={{ p: 3, height: '100%' }}>
+          <Paper sx={{ p, height: '100%' }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
               <Typography variant="h6" component="h2">
                 Recent Name Requests
@@ -183,7 +178,7 @@ const DashboardPage: React.FC = () => {
             </Box>
             
             {nameRequests.length > 0 ? (
-              <Box>
+              
                 {nameRequests.map((request, index) => (
                   <Box key={request._id} mb={2}>
                     <Box 
@@ -191,8 +186,8 @@ const DashboardPage: React.FC = () => {
                       justifyContent="space-between" 
                       alignItems="center"
                       sx={{ 
-                        p: 2, 
-                        borderRadius: 1, 
+                        p, 
+                        borderRadius, 
                         '&:hover': { 
                           backgroundColor: 'action.hover',
                           cursor: 'pointer',
@@ -212,9 +207,9 @@ const DashboardPage: React.FC = () => {
                         <Typography 
                           variant="caption" 
                           sx={{
-                            px: 1,
+                            px,
                             py: 0.5,
-                            borderRadius: 1,
+                            borderRadius,
                             bgcolor: request.status === 'approved' 
                               ? 'success.light' 
                               : request.status === 'rejected'
@@ -242,7 +237,7 @@ const DashboardPage: React.FC = () => {
                 minHeight={200}
                 textAlign="center"
               >
-                <AssignmentIcon color="action" sx={{ fontSize: 48, mb: 2 }} />
+                <AssignmentIcon color="action" sx={{ fontSize, mb }} />
                 <Typography variant="h6" color="textSecondary" gutterBottom>
                   No name requests yet
                 </Typography>
@@ -264,7 +259,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Quick Actions */}
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, height: '100%' }}>
+          <Paper sx={{ p, height: '100%' }}>
             <Typography variant="h6" component="h2" gutterBottom>
               Quick Actions
             </Typography>

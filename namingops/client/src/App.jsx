@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Provider } from 'react-redux';
@@ -47,7 +47,7 @@ const theme = createTheme({
   },
 });
 
-const App: React.FC = () => {
+const App = () => {
   // Load user from localStorage if token exists
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -57,46 +57,48 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Layout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
-              <Route path="requests">
-                <Route index element={<NameRequestList />} />
-                <Route path="new" element={<NameRequestForm />} />
-                <Route path=":id" element={<NameRequestDetails />} />
-                <Route path=":id/edit" element={<NameRequestForm editMode />} />
-              </Route>
-              <Route path="my-requests" element={<NameRequestList myRequests />} />
-              
-              {/* Admin Routes */}
+    <div data-testid="app">
+      <Provider store={store}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
               <Route
-                path="admin/requests"
+                path="/"
                 element={
-                  <PrivateRoute roles={['admin', 'reviewer']}>
-                    <NameRequestList adminView />
+                  <PrivateRoute>
+                    <Layout />
                   </PrivateRoute>
                 }
-              />
-              
-              {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </Router>
-      </ThemeProvider>
-    </Provider>
+              >
+                <Route index element={<DashboardPage />} />
+                <Route path="requests">
+                  <Route index element={<NameRequestList />} />
+                  <Route path="new" element={<NameRequestForm />} />
+                  <Route path=":id" element={<NameRequestDetails />} />
+                  <Route path=":id/edit" element={<NameRequestForm editMode />} />
+                </Route>
+                <Route path="my-requests" element={<NameRequestList myRequests />} />
+                
+                {/* Admin Routes */}
+                <Route
+                  path="admin/requests"
+                  element={
+                    <PrivateRoute roles={['admin', 'reviewer']}>
+                      <NameRequestList adminView />
+                    </PrivateRoute>
+                  }
+                />
+                
+                {/* Fallback route */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </ThemeProvider>
+      </Provider>
+    </div>
   );
 };
 

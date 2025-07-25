@@ -1,27 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton, Avatar, Menu, MenuItem, Divider, Drawer, List, ListItem, ListItemIcon, ListItemText, useTheme, useMediaQuery } from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Dashboard as DashboardIcon,
-  Add as AddIcon,
-  List as ListIcon,
-  People as PeopleIcon,
-  Settings as SettingsIcon,
-  ExitToApp as LogoutIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
-} from '@mui/icons-material';
+import { 
+  AppBar, 
+  Toolbar, 
+  Typography, 
+  Button, 
+  Box, 
+  IconButton, 
+  Avatar, 
+  Menu,
+  MenuItem, 
+  Divider, 
+  Drawer, 
+  List, 
+  ListItem, 
+  ListItemIcon, 
+  ListItemText, 
+  useTheme, 
+  useMediaQuery
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AddIcon from '@mui/icons-material/Add';
+import ListIcon from '@mui/icons-material/List';
+import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
+import LogoutIcon from '@mui/icons-material/ExitToApp';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { styled } from '@mui/material/styles';
 import { logout } from '../features/auth/authSlice';
-import { RootState } from '../app/store';
 
-const drawerWidth = 240;
+export const drawerWidth = 240;
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
-  open?: boolean;
-}>(({ theme, open }) => ({
+const Main = styled('main', { 
+  shouldForwardProp: (prop) => prop !== 'open' 
+})(({ theme, open }) => ({
   flexGrow: 1,
   padding: theme.spacing(3),
   transition: theme.transitions.create('margin', {
@@ -34,8 +49,11 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
-    marginLeft: drawerWidth,
+    marginLeft: `${drawerWidth}px`,
   }),
+  [theme.breakpoints.down('sm')]: {
+    marginLeft: 0,
+  },
 }));
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -43,20 +61,16 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   alignItems: 'center',
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
 }));
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(!isMobile);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -72,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
-  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
@@ -101,7 +115,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const drawer = (
     <div>
       <DrawerHeader>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, ml: 1 }}>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, ml: 2 }}>
           NamingOps
         </Typography>
         <IconButton onClick={handleDrawerToggle}>
@@ -112,11 +126,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       <List>
         {menuItems.map((item) => (
           <ListItem 
-            button 
             key={item.text} 
-            component={RouterLink} 
+            component={Link} 
             to={item.path}
             onClick={() => setMobileOpen(false)}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'action.hover',
+              },
+              '&.Mui-selected': {
+                backgroundColor: 'action.selected',
+              },
+              textDecoration: 'none',
+              color: 'inherit',
+            }}
           >
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
@@ -134,11 +157,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </ListItem>
             {adminMenuItems.map((item) => (
               <ListItem 
-                button 
                 key={item.text} 
-                component={RouterLink} 
+                component={Link} 
                 to={item.path}
                 onClick={() => setMobileOpen(false)}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: 'action.selected',
+                  },
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -171,7 +203,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow }}>
             NamingOps
           </Typography>
           {user ? (
@@ -185,7 +217,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 startIcon={
                   <Avatar 
                     alt={user.name} 
-                    src={`/static/images/avatar/${user.id}.jpg`}
+                    src={`/static/images/avatar/${user.id || 'default'}.jpg`}
                     sx={{ width: 32, height: 32 }}
                   />
                 }
@@ -248,9 +280,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </Drawer>
       </Box>
       
-      <Main open={!isMobile && drawerOpen}>
+      <Main open={drawerOpen}>
         <DrawerHeader />
-        {children}
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
       </Main>
     </Box>
   );

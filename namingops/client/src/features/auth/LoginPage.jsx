@@ -3,21 +3,22 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Container, Typography, Box, Paper, Avatar, Grid } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { login, googleAuth } from '../../services/api';
+import { authAPI } from '../../services/api';
 import { loginStart, loginSuccess, loginFailure, clearError } from './authSlice';
+import { User } from './authSlice';
 import { RootState } from '../../app/store';
 
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { loading, error, isAuthenticated } = useSelector((state) => state.auth);
 
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      navigate(from, { replace });
     }
   }, [isAuthenticated, navigate, from]);
 
@@ -32,26 +33,51 @@ const LoginPage: React.FC = () => {
 
   const handleGoogleLogin = () => {
     dispatch(loginStart());
-    googleAuth();
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/google`;
   };
+
+  // Define types for API responses and errors
+  
+  
+  ;
+    };
+    message;
+  }
 
   const handleDemoLogin = async (role: 'submitter' | 'reviewer' | 'admin') => {
     try {
       dispatch(loginStart());
-      // This is just for demo purposes
       const demoCredentials = {
         submitter: { email: 'submitter@example.com', password: 'demo123' },
         reviewer: { email: 'reviewer@example.com', password: 'demo123' },
         admin: { email: 'admin@example.com', password: 'demo123' },
       }[role];
 
-      const response = await login(demoCredentials);
-      const { user, token } = response.data;
+      const response = await authAPI.login({
+        email: demoCredentials.email,
+        password: demoCredentials.password,
+      }) data };
       
-      dispatch(loginSuccess({ user, token }));
-      navigate(from, { replace: true });
-    } catch (err) {
-      dispatch(loginFailure(err.response?.data?.message || 'Login failed'));
+      if (response?.data) {
+        const { user, token } = response.data;
+        dispatch(loginSuccess({ user, token }));
+        navigate(from, { replace });
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      let errorMessage = 'Login failed. Please check your credentials.';
+      
+      if (error && typeof error === 'object') {
+        const apiError = error<ApiError>;
+        if (apiError.response?.data?.message) {
+          errorMessage = apiError.response.data.message;
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+      }
+      
+      dispatch(loginFailure(errorMessage));
     }
   };
 
@@ -59,13 +85,13 @@ const LoginPage: React.FC = () => {
     <Container component="main" maxWidth="xs">
       <Box
         sx={{
-          marginTop: 8,
+          marginTop,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
-        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+        <Avatar sx={{ m, bgcolor: 'secondary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
@@ -80,19 +106,19 @@ const LoginPage: React.FC = () => {
           </Box>
         )}
 
-        <Box component={Paper} elevation={3} sx={{ p: 3, mt: 3, width: '100%' }}>
+        <Box component={Paper} elevation={3} sx={{ p, mt, width: '100%' }}>
           <Button
             fullWidth
             variant="contained"
             color="primary"
             onClick={handleGoogleLogin}
             disabled={loading}
-            sx={{ mt: 1, mb: 2 }}
+            sx={{ mt, mb }}
           >
             Sign in with Google
           </Button>
 
-          <Typography variant="body2" color="textSecondary" align="center" sx={{ my: 2 }}>
+          <Typography variant="body2" color="textSecondary" align="center" sx={{ my }}>
             OR
           </Typography>
 
@@ -100,38 +126,35 @@ const LoginPage: React.FC = () => {
             Demo Accounts:
           </Typography>
           
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => handleDemoLogin('submitter')}
-                disabled={loading}
-              >
-                Submitter
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => handleDemoLogin('reviewer')}
-                disabled={loading}
-              >
-                Reviewer
-              </Button>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Button
-                fullWidth
-                variant="outlined"
-                onClick={() => handleDemoLogin('admin')}
-                disabled={loading}
-              >
-                Admin
-              </Button>
-            </Grid>
-          </Grid>
+          <Box sx={{ display: 'flex', gap, flexDirection: { xs: 'column', sm: 'row' }, mt }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => handleDemoLogin('submitter')}
+              disabled={loading}
+              sx={{ py: 1.5 }}
+            >
+              Submitter
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => handleDemoLogin('reviewer')}
+              disabled={loading}
+              sx={{ py: 1.5 }}
+            >
+              Reviewer
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => handleDemoLogin('admin')}
+              disabled={loading}
+              sx={{ py: 1.5 }}
+            >
+              Admin
+            </Button>
+          </Box>
         </Box>
 
         <Box mt={3} textAlign="center">

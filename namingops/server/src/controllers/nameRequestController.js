@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../middleware/errorHandler';
 import NameRequest, { INameRequest, RequestStatus } from '../models/NameRequest';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
@@ -13,7 +13,7 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
 // Ensure uploads directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(UPLOAD_DIR, { recursive });
 }
 
 // Helper function to handle file uploads
@@ -28,7 +28,7 @@ const handleFileUpload = async (file: Express.Multer.File): Promise<string | nul
     
     // Ensure the upload directory exists
     if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+      fs.mkdirSync(UPLOAD_DIR, { recursive });
     }
     
     // Save file to uploads directory
@@ -59,8 +59,8 @@ const cleanupFiles = async (files: Express.Multer.File[] = []) => {
 // @desc    Create a new name request
 // @route   POST /api/name-requests
 // @access  Private
-const createNameRequest = async (req: Request, res: Response, next: NextFunction) => {
-  const files = Array.isArray(req.files) ? req.files : [];
+const createNameRequest = async (req, res, next) => {
+  const files = Array.isArray(req.files) ? req.files ;
   
   try {
     const userId = req.user?.id;
@@ -69,7 +69,7 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
     }
 
     // Handle file uploads if any
-    const attachments: string[] = [];
+    const attachments = [];
     for (const file of files) {
       try {
         const filePath = await handleFileUpload(file);
@@ -85,10 +85,10 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
     // Create name request
     const nameRequest = new NameRequest({
       ...req.body,
-      submittedBy: userId,
-      status: 'submitted' as RequestStatus,
+      submittedBy,
+      status: 'submitted',
       submittedAt: new Date(),
-      attachments: attachments.length > 0 ? attachments : undefined,
+      attachments: attachments.length > 0 ? attachments ,
       // Set default values for optional fields
       isCoined: Boolean(req.body.isCoined) || false,
       isAcronymHeavy: Boolean(req.body.isAcronymHeavy) || false,
@@ -113,8 +113,8 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
     await nameRequest.populate('submittedBy', 'name email');
     
     res.status(201).json({
-      success: true,
-      data: nameRequest,
+      success,
+      data,
       message: 'Name request submitted successfully'
     });
   } catch (error) {
@@ -127,27 +127,24 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
 // @desc    Get all name requests
 // @route   GET /api/name-requests
 // @access  Private
-const getNameRequests = async (req: Request, res: Response, next: NextFunction) => {
+const getNameRequests = async (req, res, next) => {
   try {
     const { status, assetType, search, sortBy = 'submittedAt', sortOrder = 'desc' } = req.query;
     const userId = req.user?.id;
     const isAdmin = req.user?.role === 'admin' || req.user?.role === 'reviewer';
     
-    const query: any = {};
+    const query = {};
     
     // Filter by status if provided
     if (status) {
       query.status = status;
     }
     
-    // Filter by asset type if provided
-    if (assetType) {
-      query.assetType = assetType;
-    }
+    // Filter by asset 
     
     // Apply search filter if search term is provided
     if (search) {
-      query.$text = { $search: search as string };
+      query.$text = { $search: search };
     }
     
     // If user is not an admin or reviewer, only show their own requests
@@ -156,14 +153,14 @@ const getNameRequests = async (req: Request, res: Response, next: NextFunction) 
     }
     
     // Build sort object
-    const sort: any = {};
+    const sort = {};
     const sortField = typeof sortBy === 'string' ? sortBy : 'submittedAt';
     const sortDirection = sortOrder === 'asc' ? 1 : -1;
     sort[sortField] = sortDirection;
     
     // Execute query with pagination
-    const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
-    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
+    const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) ;
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) ;
     const skip = (page - 1) * limit;
     
     const [requests, total] = await Promise.all([
@@ -178,12 +175,12 @@ const getNameRequests = async (req: Request, res: Response, next: NextFunction) 
     ]);
     
     res.status(200).json({
-      success: true,
+      success,
       count: requests.length,
       total,
       page,
       pages: Math.ceil(total / limit),
-      data: requests
+      data
     });
   } catch (error) {
     next(error);
@@ -193,7 +190,7 @@ const getNameRequests = async (req: Request, res: Response, next: NextFunction) 
 // @desc    Get single name request
 // @route   GET /api/name-requests/:id
 // @access  Private
-const getNameRequest = async (req: Request, res: Response, next: NextFunction) => {
+const getNameRequest = async (req, res, next) => {
   try {
     const nameRequest = await NameRequest.findById(req.params.id);
     
@@ -202,8 +199,8 @@ const getNameRequest = async (req: Request, res: Response, next: NextFunction) =
     }
     
     res.status(200).json({
-      success: true,
-      data: nameRequest
+      success,
+      data
     });
   } catch (error) {
     next(error);
@@ -213,12 +210,12 @@ const getNameRequest = async (req: Request, res: Response, next: NextFunction) =
 // @desc    Update name request
 // @route   PUT /api/name-requests/:id
 // @access  Private
-const updateNameRequest = async (req: Request, res: Response, next: NextFunction) => {
+const updateNameRequest = async (req, res, next) => {
   try {
     const nameRequest = await NameRequest.findByIdAndUpdate(
       req.params.id,
       { ...req.body, updated_at: new Date() },
-      { new: true, runValidators: true }
+      { new, runValidators }
     );
     
     if (!nameRequest) {
@@ -226,8 +223,8 @@ const updateNameRequest = async (req: Request, res: Response, next: NextFunction
     }
     
     res.status(200).json({
-      success: true,
-      data: nameRequest
+      success,
+      data
     });
   } catch (error) {
     next(error);
@@ -237,7 +234,7 @@ const updateNameRequest = async (req: Request, res: Response, next: NextFunction
 // @desc    Delete name request
 // @route   DELETE /api/name-requests/:id
 // @access  Private/Admin
-const deleteNameRequest = async (req: Request, res: Response, next: NextFunction) => {
+const deleteNameRequest = async (req, res, next) => {
   try {
     const nameRequest = await NameRequest.findByIdAndDelete(req.params.id);
     
@@ -246,8 +243,8 @@ const deleteNameRequest = async (req: Request, res: Response, next: NextFunction
     }
     
     res.status(200).json({
-      success: true,
-      data: {}
+      success,
+      data
     });
   } catch (error) {
     next(error);

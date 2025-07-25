@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction
+  err,
+  req,
+  res,
+  next
 ) => {
   console.error(err.stack);
 
@@ -14,20 +14,20 @@ export const errorHandler = (
 
   // Send error response
   res.status(statusCode).json({
-    success: false,
-    status: statusCode,
+    success,
+    status,
     message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };
 
 export class ApiError extends Error {
-  statusCode: number;
-  isOperational: boolean;
+  statusCode;
+  isOperational;
 
   constructor(
-    statusCode: number,
-    message: string,
+    statusCode,
+    message,
     isOperational = true,
     stack = ''
   ) {
@@ -42,6 +42,6 @@ export class ApiError extends Error {
   }
 }
 
-export const notFound = (req: Request, res: Response, next: NextFunction) => {
+export const notFound = (req, res, next) => {
   next(new ApiError(404, `Not Found - ${req.originalUrl}`));
 };

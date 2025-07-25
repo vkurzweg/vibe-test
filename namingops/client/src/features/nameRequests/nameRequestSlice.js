@@ -1,26 +1,7 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { NameRequest, NameRequestStatus, NameRequestType } from './types';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-interface NameRequestState {
-  nameRequests: NameRequest[];
-  currentRequest: NameRequest | null;
-  loading: boolean;
-  error: string | null;
-  total: number;
-  page: number;
-  limit: number;
-  filters: {
-    status: NameRequestStatus | 'all';
-    type: NameRequestType | 'all';
-    search: string;
-    myRequests: boolean;
-  };
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-}
-
-const initialState: NameRequestState = {
+const initialState = {
   nameRequests: [],
   currentRequest: null,
   loading: false,
@@ -41,16 +22,7 @@ const initialState: NameRequestState = {
 // Async thunks
 export const fetchNameRequests = createAsyncThunk(
   'nameRequests/fetchAll',
-  async (params: {
-    page: number;
-    limit: number;
-    sortBy: string;
-    sortOrder: 'asc' | 'desc';
-    status?: NameRequestStatus | 'all';
-    type?: NameRequestType | 'all';
-    search?: string;
-    myRequests?: boolean;
-  }, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
       const { page, limit, sortBy, sortOrder, status, type, search, myRequests } = params;
       const response = await api.get('/name-requests', {
@@ -66,7 +38,7 @@ export const fetchNameRequests = createAsyncThunk(
         }
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch name requests');
     }
   }
@@ -74,11 +46,11 @@ export const fetchNameRequests = createAsyncThunk(
 
 export const fetchNameRequestById = createAsyncThunk(
   'nameRequests/fetchById',
-  async (id: string, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
       const response = await api.get(`/name-requests/${id}`);
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch name request');
     }
   }
@@ -86,7 +58,7 @@ export const fetchNameRequestById = createAsyncThunk(
 
 export const createNameRequest = createAsyncThunk(
   'nameRequests/create',
-  async (data: Partial<NameRequest>, { rejectWithValue }) => {
+  async (data, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -102,7 +74,7 @@ export const createNameRequest = createAsyncThunk(
           } else if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
           } else {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value);
           }
         }
       });
@@ -114,7 +86,7 @@ export const createNameRequest = createAsyncThunk(
       });
       
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create name request');
     }
   }
@@ -122,7 +94,7 @@ export const createNameRequest = createAsyncThunk(
 
 export const updateNameRequest = createAsyncThunk(
   'nameRequests/update',
-  async ({ id, data }: { id: string; data: Partial<NameRequest> }, { rejectWithValue }) => {
+  async ({ id, data }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -138,7 +110,7 @@ export const updateNameRequest = createAsyncThunk(
           } else if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
           } else {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value);
           }
         }
       });
@@ -150,7 +122,7 @@ export const updateNameRequest = createAsyncThunk(
       });
       
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to update name request');
     }
   }
@@ -158,11 +130,11 @@ export const updateNameRequest = createAsyncThunk(
 
 export const deleteNameRequest = createAsyncThunk(
   'nameRequests/delete',
-  async (id: string, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
       await api.delete(`/name-requests/${id}`);
       return id;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to delete name request');
     }
   }
@@ -170,11 +142,11 @@ export const deleteNameRequest = createAsyncThunk(
 
 export const approveNameRequest = createAsyncThunk(
   'nameRequests/approve',
-  async (id: string, { rejectWithValue }) => {
+  async (id, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/name-requests/${id}/approve`, { status: NameRequestStatus.APPROVED });
+      const response = await api.post(`/name-requests/${id}/approve`, { status: 'approved' });
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to approve name request');
     }
   }
@@ -182,13 +154,13 @@ export const approveNameRequest = createAsyncThunk(
 
 export const rejectNameRequest = createAsyncThunk(
   'nameRequests/reject',
-  async ({ id, reason }: { id: string; reason: string }, { rejectWithValue }) => {
+  async ({ id, reason }, { rejectWithValue }) => {
     try {
       const response = await api.post(`/name-requests/${id}/reject`, { 
         rejectionReason: reason 
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to reject name request');
     }
   }
@@ -196,13 +168,13 @@ export const rejectNameRequest = createAsyncThunk(
 
 export const requestChangesNameRequest = createAsyncThunk(
   'nameRequests/requestChanges',
-  async ({ id, changes }: { id: string; changes: string }, { rejectWithValue }) => {
+  async ({ id, changes }, { rejectWithValue }) => {
     try {
       const response = await api.post(`/name-requests/${id}/request-changes`, { 
-        changesRequested: changes 
+        changesRequested: changes
       });
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to request changes for name request');
     }
   }
@@ -212,7 +184,7 @@ const nameRequestSlice = createSlice({
   name: 'nameRequests',
   initialState,
   reducers: {
-    setFilters(state, action: PayloadAction<Partial<NameRequestState['filters']>>) {
+    setFilters(state, action) {
       state.filters = { ...state.filters, ...action.payload };
       state.page = 1; // Reset to first page when filters change
     },
@@ -225,11 +197,11 @@ const nameRequestSlice = createSlice({
     clearCurrentRequest(state) {
       state.currentRequest = null;
     },
-    setSort(state, action: PayloadAction<{ sortBy: string; sortOrder: 'asc' | 'desc' }>) {
+    setSort(state, action) {
       state.sortBy = action.payload.sortBy;
       state.sortOrder = action.payload.sortOrder;
     },
-    setPagination(state, action: PayloadAction<{ page: number; limit: number }>) {
+    setPagination(state, action) {
       state.page = action.payload.page;
       state.limit = action.payload.limit;
     }
@@ -241,11 +213,7 @@ const nameRequestSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchNameRequests.fulfilled, (state, action: PayloadAction<{
-        data: NameRequest[];
-        total: number;
-        page: number;
-      }>) => {
+      .addCase(fetchNameRequests.fulfilled, (state, action) => {
         state.loading = false;
         state.nameRequests = action.payload.data;
         state.total = action.payload.total;
@@ -253,7 +221,7 @@ const nameRequestSlice = createSlice({
       })
       .addCase(fetchNameRequests.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Failed to fetch name requests';
+        state.error = action.payload || 'Failed to fetch name requests';
       });
 
     // Fetch single name request by ID
@@ -262,13 +230,13 @@ const nameRequestSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchNameRequestById.fulfilled, (state, action: PayloadAction<NameRequest>) => {
+      .addCase(fetchNameRequestById.fulfilled, (state, action) => {
         state.loading = false;
         state.currentRequest = action.payload;
       })
       .addCase(fetchNameRequestById.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Failed to fetch name request';
+        state.error = action.payload || 'Failed to fetch name request';
       });
 
     // Create name request
@@ -277,7 +245,7 @@ const nameRequestSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createNameRequest.fulfilled, (state, action: PayloadAction<NameRequest>) => {
+      .addCase(createNameRequest.fulfilled, (state, action) => {
         state.loading = false;
         state.nameRequests.unshift(action.payload);
         if (state.currentRequest) {
@@ -286,12 +254,12 @@ const nameRequestSlice = createSlice({
       })
       .addCase(createNameRequest.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Failed to create name request';
+        state.error = action.payload || 'Failed to create name request';
       });
 
     // Update name request
     builder
-      .addCase(updateNameRequest.fulfilled, (state, action: PayloadAction<NameRequest>) => {
+      .addCase(updateNameRequest.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.nameRequests.findIndex(req => req.id === action.payload.id);
         if (index !== -1) {
@@ -302,7 +270,7 @@ const nameRequestSlice = createSlice({
         }
       })
       .addCase(updateNameRequest.rejected, (state, action) => {
-        state.error = action.payload as string || 'Failed to update name request';
+        state.error = action.payload || 'Failed to update name request';
       });
 
     // Delete name request
@@ -311,7 +279,7 @@ const nameRequestSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(deleteNameRequest.fulfilled, (state, action: PayloadAction<string>) => {
+      .addCase(deleteNameRequest.fulfilled, (state, action) => {
         state.loading = false;
         state.nameRequests = state.nameRequests.filter(req => req.id !== action.payload);
         if (state.currentRequest?.id === action.payload) {
@@ -321,12 +289,12 @@ const nameRequestSlice = createSlice({
       })
       .addCase(deleteNameRequest.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload as string || 'Failed to delete name request';
+        state.error = action.payload || 'Failed to delete name request';
       });
 
     // Approve name request
     builder
-      .addCase(approveNameRequest.fulfilled, (state, action: PayloadAction<NameRequest>) => {
+      .addCase(approveNameRequest.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.nameRequests.findIndex(req => req.id === action.payload.id);
         if (index !== -1) {
@@ -337,12 +305,12 @@ const nameRequestSlice = createSlice({
         }
       })
       .addCase(approveNameRequest.rejected, (state, action) => {
-        state.error = action.payload as string || 'Failed to approve name request';
+        state.error = action.payload || 'Failed to approve name request';
       });
 
     // Reject name request
     builder
-      .addCase(rejectNameRequest.fulfilled, (state, action: PayloadAction<NameRequest>) => {
+      .addCase(rejectNameRequest.fulfilled, (state, action) => {
         state.loading = false;
         const index = state.nameRequests.findIndex(req => req.id === action.payload.id);
         if (index !== -1) {
@@ -353,7 +321,7 @@ const nameRequestSlice = createSlice({
         }
       })
       .addCase(rejectNameRequest.rejected, (state, action) => {
-        state.error = action.payload as string || 'Failed to reject name request';
+        state.error = action.payload || 'Failed to reject name request';
       });
 
     // Request changes for name request
@@ -368,7 +336,7 @@ const nameRequestSlice = createSlice({
         }
       })
       .addCase(requestChangesNameRequest.rejected, (state, action) => {
-        state.error = action.payload as string || 'Failed to request changes for name request';
+        state.error = action.payload || 'Failed to request changes for name request';
       });
   },
 });

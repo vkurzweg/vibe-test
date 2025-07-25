@@ -2,40 +2,27 @@ import axios from 'axios';
 import { NameRequest, NameRequestStatus, NameRequestType } from '../features/nameRequests/types';
 
 // Define custom types for our API responses
-type ApiResponse<T = any> = {
-  data: T;
-  message?: string;
-};
+;
 
-type PaginatedResponse<T> = {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-};
+;
 
-// Extend the existing axios config type
-type CustomAxiosConfig = {
-  _retry?: boolean;
-  headers?: Record<string, string>;
-  [key: string]: any;
-};
+// Extend the existing axios config ;
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Important for cookies/sessions
-  timeout: 10000, // 10 seconds
+  withCredentials, // Important for cookies/sessions
+  timeout, // 10 seconds
 });
 
 // Request interceptor for auth token
 api.interceptors.request.use(
-  (config: any) => {
+  (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers = config.headers || {};
@@ -43,15 +30,15 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error: any) => {
+  (error) => {
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for error handling
 api.interceptors.response.use(
-  (response: any) => response,
-  async (error: any) => {
+  (response) => response,
+  async (error) => {
     // Handle 401 Unauthorized (token expired, invalid, etc.)
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -82,12 +69,12 @@ api.interceptors.response.use(
 );
 
 // Helper function to handle API responses
-const handleResponse = <T>(response: any): T => {
+const handleResponse = (response) => {
   return response.data;
 };
 
 // Helper function to handle API errors
-const handleError = (error: any): never => {
+const handleError = (error) => {
   if (error.response?.data) {
     const message = error.response.data.message || error.message || 'An error occurred';
     throw new Error(message);
@@ -97,9 +84,9 @@ const handleError = (error: any): never => {
 
 // Auth API
 export const authAPI = {
-  login: async (credentials: { email: string; password: string }) => {
+  login: async (credentials: { email; password }) => {
     try {
-      const response = await api.post<{ token: string; user: any }>('/auth/login', credentials);
+      const response = await api.post<{ token; user }>('/auth/login', credentials);
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
@@ -137,17 +124,17 @@ export const authAPI = {
 export const nameRequestAPI = {
   // Get all name requests with filters and pagination
   getRequests: async (params: {
-    page?: number;
-    limit?: number;
-    sortBy?: string;
+    page?;
+    limit?;
+    sortBy?;
     sortOrder?: 'asc' | 'desc';
-    status?: NameRequestStatus;
-    type?: NameRequestType;
-    search?: string;
-    myRequests?: boolean;
+    status?;
+    type?;
+    search?;
+    myRequests?;
   }) => {
     try {
-      const response = await api.get<{ data: NameRequest[]; total: number }>('/name-requests', { params });
+      const response = await api.get<{ data; total }>('/name-requests', { params });
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -155,9 +142,9 @@ export const nameRequestAPI = {
   },
   
   // Get a single name request by ID
-  getRequestById: async (id: string) => {
+  getRequestById: async (id) => {
     try {
-      const response = await api.get<NameRequest>(`/name-requests/${id}`);
+      const response = await api.get(`/name-requests/${id}`);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -184,12 +171,12 @@ export const nameRequestAPI = {
           } else if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
           } else {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value | Blob);
           }
         }
       });
       
-      const response = await api.post<NameRequest>('/name-requests', formData, {
+      const response = await api.post('/name-requests', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -202,7 +189,7 @@ export const nameRequestAPI = {
   },
   
   // Update an existing name request
-  updateRequest: async (id: string, data: Partial<NameRequest>) => {
+  updateRequest: async (id, data: Partial<NameRequest>) => {
     try {
       const formData = new FormData();
       
@@ -221,12 +208,12 @@ export const nameRequestAPI = {
           } else if (typeof value === 'object' && !(value instanceof File)) {
             formData.append(key, JSON.stringify(value));
           } else {
-            formData.append(key, value as string | Blob);
+            formData.append(key, value | Blob);
           }
         }
       });
       
-      const response = await api.put<NameRequest>(`/name-requests/${id}`, formData, {
+      const response = await api.put(`/name-requests/${id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -239,7 +226,7 @@ export const nameRequestAPI = {
   },
   
   // Delete a name request
-  deleteRequest: async (id: string) => {
+  deleteRequest: async (id) => {
     try {
       const response = await api.delete(`/name-requests/${id}`);
       return handleResponse(response);
@@ -249,9 +236,9 @@ export const nameRequestAPI = {
   },
   
   // Approve a name request
-  approveRequest: async (id: string, data: { approvalNotes?: string }) => {
+  approveRequest: async (id, data: { approvalNotes? }) => {
     try {
-      const response = await api.post<NameRequest>(`/name-requests/${id}/approve`, data);
+      const response = await api.post(`/name-requests/${id}/approve`, data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -259,9 +246,9 @@ export const nameRequestAPI = {
   },
   
   // Reject a name request
-  rejectRequest: async (id: string, data: { rejectionReason: string }) => {
+  rejectRequest: async (id, data: { rejectionReason }) => {
     try {
-      const response = await api.post<NameRequest>(`/name-requests/${id}/reject`, data);
+      const response = await api.post(`/name-requests/${id}/reject`, data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -269,9 +256,9 @@ export const nameRequestAPI = {
   },
   
   // Request changes for a name request
-  requestChanges: async (id: string, data: { changesRequested: string }) => {
+  requestChanges: async (id, data: { changesRequested }) => {
     try {
-      const response = await api.post<NameRequest>(`/name-requests/${id}/request-changes`, data);
+      const response = await api.post(`/name-requests/${id}/request-changes`, data);
       return handleResponse(response);
     } catch (error) {
       return handleError(error);
@@ -279,7 +266,7 @@ export const nameRequestAPI = {
   },
   
   // Add a comment to a name request
-  addComment: async (requestId: string, data: { text: string }) => {
+  addComment: async (requestId, data: { text }) => {
     try {
       const response = await api.post(`/name-requests/${requestId}/comments`, data);
       return handleResponse(response);
@@ -289,7 +276,7 @@ export const nameRequestAPI = {
   },
   
   // Upload a file attachment
-  uploadAttachment: async (requestId: string, file: File) => {
+  uploadAttachment: async (requestId, file) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -307,7 +294,7 @@ export const nameRequestAPI = {
   },
   
   // Delete a file attachment
-  deleteAttachment: async (requestId: string, attachmentId: string) => {
+  deleteAttachment: async (requestId, attachmentId) => {
     try {
       const response = await api.delete(`/name-requests/${requestId}/attachments/${attachmentId}`);
       return handleResponse(response);

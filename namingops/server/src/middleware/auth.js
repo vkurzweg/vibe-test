@@ -1,23 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from './errorHandler';
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy } from 'passport-google-oauth20';
 
-export interface IUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'submitter' | 'reviewer' | 'admin';
-}
+export 
 
-declare global {
+global {
   namespace Express {
-    interface User extends IUser {}
+    
   }
 }
 
 // Mock users - replace with database calls in production
-const users: IUser[] = [
+const users = [
   {
     id: '1',
     email: 'submitter@example.com',
@@ -61,17 +56,17 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 // Serialize/Deserialize user
-passport.serializeUser((user: IUser, done) => {
+passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser((id: string, done) => {
+passport.deserializeUser((id, done) => {
   const user = users.find(u => u.id === id);
   done(null, user || null);
 });
 
 // Authentication middleware
-export const protect = (req: Request, res: Response, next: NextFunction) => {
+export const protect = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -86,8 +81,8 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Role-based authorization middleware
-export const authorize = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const authorize = (...roles) => {
+  return (req, res, next) => {
     if (!req.isAuthenticated()) {
       return next(new ApiError(401, 'Not authenticated'));
     }
@@ -96,7 +91,7 @@ export const authorize = (...roles: string[]) => {
       return next(new ApiError(401, 'User not found'));
     }
     
-    const userRole = (req.user as IUser).role;
+    const userRole = (req.user).role;
     
     if (!roles.includes(userRole)) {
       return next(

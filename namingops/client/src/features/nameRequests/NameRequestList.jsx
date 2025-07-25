@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Visibility, Edit, Delete } from '@mui/icons-material';
 import { 
   Box, 
+  ListItemIcon, 
+  ListItemText,
   Button, 
   Card, 
   CardContent, 
@@ -35,15 +38,15 @@ import {
   CircularProgress
 } from '@mui/material';
 import { 
-  Add as AddIcon, 
-  FilterList as FilterListIcon, 
-  Search as SearchIcon, 
-  MoreVert as MoreVertIcon,
-  CheckCircle as CheckCircleIcon,
-  Cancel as CancelIcon,
-  Pending as PendingIcon,
-  Info as InfoIcon,
-  Lock as LockIcon
+  Add, 
+  FilterList, 
+  Search, 
+  MoreVert,
+  CheckCircle,
+  Cancel,
+  Pending,
+  Info,
+  Lock
 } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
 import { AppDispatch, RootState } from '../../app/store';
@@ -51,40 +54,29 @@ import { fetchNameRequests } from './nameRequestSlice';
 import { NameRequest, NameRequestStatus, NameRequestType } from './types';
 import { format } from 'date-fns';
 
-interface HeadCell {
-  id: keyof NameRequest;
-  label: string;
-  numeric: boolean;
-  sortable: boolean;
-}
 
-const headCells: HeadCell[] = [
-  { id: 'requestedName', label: 'Name', numeric: false, sortable: true },
-  { id: 'domain', label: 'Domain', numeric: false, sortable: true },
-  { id: 'type', label: 'Type', numeric: false, sortable: true },
-  { id: 'status', label: 'Status', numeric: false, sortable: true },
-  { id: 'createdAt', label: 'Created', numeric: true, sortable: true },
-  { id: 'targetDate', label: 'Target Date', numeric: true, sortable: true },
-  { id: 'actions', label: '', numeric: false, sortable: false },
+
+const headCells = [
+  { id: 'requestedName', label: 'Name', numeric, sortable },
+  { id: 'domain', label: 'Domain', numeric, sortable },
+  { id: 'type', label: 'Type', numeric, sortable },
+  { id: 'status', label: 'Status', numeric, sortable },
+  { id: 'createdAt', label: 'Created', numeric, sortable },
+  { id: 'targetDate', label: 'Target Date', numeric, sortable },
+  { id: 'actions', label: '', numeric, sortable },
 ];
 
-interface EnhancedTableProps {
-  onRequestSort: (property: keyof NameRequest) => void;
-  order: 'asc' | 'desc';
-  orderBy: string;
-  rowCount: number;
-  adminView?: boolean;
-}
 
-function EnhancedTableHead(props: EnhancedTableProps) {
+
+function EnhancedTableHead(props) {
   const { order, orderBy, onRequestSort, adminView } = props;
   const createSortHandler = (property: keyof NameRequest) => () => {
     onRequestSort(property);
   };
 
   return (
-    <TableHead>
-      <TableRow>
+    
+      
         {headCells.map((headCell) => {
           // Skip certain columns based on view mode
           if (headCell.id === 'actions' && !adminView) return null;
@@ -93,7 +85,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             <TableCell
               key={headCell.id}
               align={headCell.numeric ? 'right' : 'left'}
-              sortDirection={orderBy === headCell.id ? order : false}
+              sortDirection={orderBy === headCell.id ? order 
             >
               {headCell.sortable ? (
                 <TableSortLabel
@@ -106,7 +98,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
                     <Box component="span" sx={visuallyHidden}>
                       {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
                     </Box>
-                  ) : null}
+                  ) }
                 </TableSortLabel>
               ) : (
                 headCell.label
@@ -119,17 +111,14 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   );
 }
 
-interface NameRequestListProps {
-  adminView?: boolean;
-  myRequests?: boolean;
-}
 
-const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, myRequests = false }) => {
-  const dispatch = useDispatch<AppDispatch>();
+
+const NameRequestList:  = ({ adminView = false, myRequests = false }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
   
-  const { nameRequests, loading, total, page, limit } = useSelector((state: RootState) => ({
+  const { nameRequests, loading, total, page, limit } = useSelector((state) => ({
     nameRequests: state.nameRequests.nameRequests,
     loading: state.nameRequests.loading,
     total: state.nameRequests.total,
@@ -138,7 +127,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
   }));
 
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-  const [orderBy, setOrderBy] = useState<keyof NameRequest>('createdAt');
+  const [orderBy, setOrderBy] = useState('createdAt');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<NameRequestStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<NameRequestType | 'all'>('all');
@@ -152,7 +141,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     fetchData(0, limit, property, isAsc ? 'desc' : 'asc', searchTerm, statusFilter, typeFilter);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (event, newPage) => {
     fetchData(newPage, limit, orderBy, order, searchTerm, statusFilter, typeFilter);
   };
 
@@ -171,19 +160,19 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     return () => clearTimeout(timer);
   };
 
-  const handleStatusFilterChange = (event: any) => {
-    const value = event.target.value as NameRequestStatus | 'all';
+  const handleStatusFilterChange = (event) => {
+    const value = event.target.value | 'all';
     setStatusFilter(value);
     fetchData(0, limit, orderBy, order, searchTerm, value, typeFilter);
   };
 
-  const handleTypeFilterChange = (event: any) => {
-    const value = event.target.value as NameRequestType | 'all';
+  const handleTypeFilterChange = (event) => {
+    const value = event.target.value | 'all';
     setTypeFilter(value);
     fetchData(0, limit, orderBy, order, searchTerm, statusFilter, value);
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, request: NameRequest) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, request) => {
     setAnchorEl(event.currentTarget);
     setSelectedRequest(request);
   };
@@ -208,15 +197,15 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
   };
 
   const fetchData = (
-    pageNum: number, 
-    pageSize: number, 
+    pageNum, 
+    pageSize, 
     sortBy: keyof NameRequest, 
     sortOrder: 'asc' | 'desc',
-    search: string,
-    status: NameRequestStatus | 'all',
-    type: NameRequestType | 'all'
+    search,
+    status | 'all',
+    type | 'all'
   ) => {
-    const filters: any = {};
+    const filters = {};
     if (search) filters.search = search;
     if (status !== 'all') filters.status = status;
     if (type !== 'all') filters.type = type;
@@ -224,7 +213,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     
     dispatch(fetchNameRequests({
       page: pageNum + 1,
-      limit: pageSize,
+      limit,
       sortBy,
       sortOrder,
       ...filters
@@ -235,29 +224,24 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     fetchData(0, limit, orderBy, order, searchTerm, statusFilter, typeFilter);
   }, []);
 
-  const getStatusChip = (status: NameRequestStatus) => {
+  const getStatusChip = (status) => {
     let icon = null;
     let color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' = 'default';
     
     switch (status) {
-      case NameRequestStatus.APPROVED:
-        icon = <CheckCircleIcon fontSize="small" sx={{ mr: 0.5 }} />;
+      case NameRequestStatus.APPROVED = <CheckCircleIcon fontSize="small" sx={{ mr: 0.5 }} />;
         color = 'success';
         break;
-      case NameRequestStatus.REJECTED:
-        icon = <CancelIcon fontSize="small" sx={{ mr: 0.5 }} />;
+      case NameRequestStatus.REJECTED = <CancelIcon fontSize="small" sx={{ mr: 0.5 }} />;
         color = 'error';
         break;
-      case NameRequestStatus.PENDING:
-        icon = <PendingIcon fontSize="small" sx={{ mr: 0.5 }} />;
+      case NameRequestStatus.PENDING = <PendingIcon fontSize="small" sx={{ mr: 0.5 }} />;
         color = 'warning';
         break;
-      case NameRequestStatus.CHANGES_REQUESTED:
-        icon = <InfoIcon fontSize="small" sx={{ mr: 0.5 }} />;
+      case NameRequestStatus.CHANGES_REQUESTED = <InfoIcon fontSize="small" sx={{ mr: 0.5 }} />;
         color = 'info';
         break;
-      default:
-        break;
+      default;
     }
 
     return (
@@ -271,7 +255,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     );
   };
 
-  const getTypeChip = (type: NameRequestType) => {
+  const getTypeChip = (type) => {
     return (
       <Chip
         label={type}
@@ -281,19 +265,19 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
     );
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString) => {
     return format(new Date(dateString), 'MMM d, yyyy');
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * limit - total) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * limit - total) ;
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
+      <Paper sx={{ width: '100%', mb }}>
         <Toolbar
           sx={{
-            pl: { sm: 2 },
-            pr: { xs: 1, sm: 1 },
+            pl: { sm },
+            pr: { xs, sm },
             ...(loading && {
               bgcolor: (theme) =>
                 theme.palette.mode === 'light'
@@ -315,7 +299,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => navigate('/requests/new')}
-            sx={{ mr: 2 }}
+            sx={{ mr }}
           >
             New Request
           </Button>
@@ -327,7 +311,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
           </Tooltip>
         </Toolbar>
         
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ p, borderBottom, borderColor: 'divider' }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} sm={6} md={4}>
               <TextField
@@ -388,7 +372,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
         
         <TableContainer>
           <Table
-            sx={{ minWidth: 750 }}
+            sx={{ minWidth }}
             aria-labelledby="tableTitle"
             size="medium"
           >
@@ -399,22 +383,22 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
               rowCount={nameRequests.length}
               adminView={adminView}
             />
-            <TableBody>
+            
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={headCells.length + (adminView ? 0 : 1)} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={headCells.length + (adminView ? 0 )} align="center" sx={{ py }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : nameRequests.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={headCells.length + (adminView ? 0 : 1)} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={headCells.length + (adminView ? 0 )} align="center" sx={{ py }}>
                     <Box display="flex" flexDirection="column" alignItems="center">
-                      <SearchIcon fontSize="large" color="disabled" sx={{ mb: 1 }} />
+                      <SearchIcon fontSize="large" color="disabled" sx={{ mb }} />
                       <Typography variant="subtitle1" color="textSecondary">
                         No name requests found
                       </Typography>
-                      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="textSecondary" sx={{ mt }}>
                         {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
                           ? 'Try adjusting your search or filter criteria'
                           : 'Create a new name request to get started'}
@@ -424,7 +408,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
                           variant="contained"
                           startIcon={<AddIcon />}
                           onClick={() => navigate('/requests/new')}
-                          sx={{ mt: 2 }}
+                          sx={{ mt }}
                         >
                           New Request
                         </Button>
@@ -438,14 +422,14 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
                     <TableRow
                       hover
                       key={request._id}
-                      sx={{ '&:last-child td, &:last-child th': { border: 0 }, cursor: 'pointer' }}
+                      sx={{ '&:last-child td, &:last-child th': { border }, cursor: 'pointer' }}
                       onClick={() => navigate(`/requests/${request._id}`)}
                     >
                       <TableCell component="th" scope="row">
                         <Box display="flex" alignItems="center">
                           {request.isConfidential && (
                             <Tooltip title="Confidential">
-                              <LockIcon fontSize="small" color="action" sx={{ mr: 1 }} />
+                              <LockIcon fontSize="small" color="action" sx={{ mr }} />
                             </Tooltip>
                           )}
                           <Typography variant="body2" fontWeight="medium">
@@ -458,10 +442,10 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
                           {request.domain}
                         </Typography>
                       </TableCell>
-                      <TableCell>
+                      
                         {getTypeChip(request.type)}
                       </TableCell>
-                      <TableCell>
+                      
                         {getStatusChip(request.status)}
                       </TableCell>
                       <TableCell align="right">
@@ -496,7 +480,7 @@ const NameRequestList: React.FC<NameRequestListProps> = ({ adminView = false, my
               )}
               {emptyRows > 0 && (
                 <TableRow style={{ height: 53 * emptyRows }}>
-                  <TableCell colSpan={headCells.length + (adminView ? 0 : 1)} />
+                  <TableCell colSpan={headCells.length + (adminView ? 0 )} />
                 </TableRow>
               )}
             </TableBody>

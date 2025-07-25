@@ -3,19 +3,15 @@ import { SubmitRequestFormData } from '../features/submitRequest/types';
 import { useAuth } from './useAuth';
 import { api } from '../services/api';
 
-export interface UseNameRequestsResult {
-  submitRequest: (data: SubmitRequestFormData) => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
-}
+export 
 
-export const useNameRequests = (): UseNameRequestsResult => {
+export const useNameRequests = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const submitRequest = useCallback(
-    async (formData: SubmitRequestFormData) => {
+    async (formData) => {
       if (!user) {
         throw new Error('User not authenticated');
       }
@@ -52,7 +48,7 @@ export const useNameRequests = (): UseNameRequestsResult => {
         }
 
         return response.data;
-      } catch (err: any) {
+      } catch (err) {
         const errorMessage = err.response?.data?.message || err.message || 'An error occurred';
         setError(errorMessage);
         throw new Error(errorMessage);

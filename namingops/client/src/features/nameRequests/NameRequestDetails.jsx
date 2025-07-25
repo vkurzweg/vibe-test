@@ -23,16 +23,16 @@ import { format } from 'date-fns';
 import { differenceInDays } from 'date-fns';
 
 // Helper Components
-function TabPanel(props: any) {
+function TabPanel(props) {
   const { children, value, index, ...other } = props;
   return (
     <div hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ p }}>{children}</Box>}
     </div>
   );
 }
 
-function a11yProps(index: number) {
+function a11yProps(index) {
   return {
     id: `request-tab-${index}`,
     'aria-controls': `request-tabpanel-${index}`,
@@ -40,18 +40,18 @@ function a11yProps(index: number) {
 }
 
 const NameRequestDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const dispatch = useDispatch<AppDispatch>();
+  const { id } = useParams<{ id }>();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
   
-  const { currentRequest, loading, error } = useSelector((state: RootState) => ({
+  const { currentRequest, loading, error } = useSelector((state) => ({
     currentRequest: state.nameRequests.currentRequest,
     loading: state.nameRequests.loading,
     error: state.nameRequests.error
   }));
 
-  const { user } = useSelector((state: RootState) => ({
+  const { user } = useSelector((state) => ({
     user: state.auth.user
   }));
 
@@ -75,7 +75,7 @@ const NameRequestDetails: React.FC = () => {
   }, [dispatch, id]);
 
   // Status helpers
-  const getStatusColor = (status: NameRequestStatus) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case NameRequestStatus.APPROVED: return 'success';
       case NameRequestStatus.REJECTED: return 'error';
@@ -85,7 +85,7 @@ const NameRequestDetails: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: NameRequestStatus) => {
+  const getStatusIcon = (status) => {
     switch (status) {
       case NameRequestStatus.APPROVED: return <CheckCircle />;
       case NameRequestStatus.REJECTED: return <Cancel />;
@@ -101,7 +101,7 @@ const NameRequestDetails: React.FC = () => {
   const handleReject = () => setRejectDialogOpen(true);
   const handleRequestChanges = () => setChangesDialogOpen(true);
   const handleEdit = () => navigate(`/requests/${id}/edit`);
-  const handleCopy = (text: string) => navigator.clipboard.writeText(text);
+  const handleCopy = (text) => navigator.clipboard.writeText(text);
 
   // Dialog confirm handlers
   const confirmDelete = () => {
@@ -113,14 +113,14 @@ const NameRequestDetails: React.FC = () => {
 
   const confirmApprove = () => {
     if (id) {
-      dispatch(approveNameRequest({ id, notes: approvalNotes }));
+      dispatch(approveNameRequest({ id, notes }));
       setApproveDialogOpen(false);
     }
   };
 
   const confirmReject = () => {
     if (id) {
-      dispatch(rejectNameRequest({ id, reason: rejectReason }));
+      dispatch(rejectNameRequest({ id, reason }));
       setRejectDialogOpen(false);
     }
   };
@@ -133,7 +133,7 @@ const NameRequestDetails: React.FC = () => {
   };
 
   if (loading) return <CircularProgress />;
-  if (error || !currentRequest) return <div>Error: {error || 'Request not found'}</div>;
+  if (error || !currentRequest) return <div>Error || 'Request not found'}</div>;
 
   const { 
     requestedName, domain, type, description, businessJustification,
@@ -156,10 +156,10 @@ const NameRequestDetails: React.FC = () => {
   const daysColor = daysRemaining < 0 ? 'error' : daysRemaining <= 7 ? 'warning' : 'success';
 
   return (
-    <Box>
+    
       {/* Header */}
       <Box mb={3} display="flex" alignItems="center">
-        <IconButton onClick={() => navigate(-1)} sx={{ mr: 1 }}>
+        <IconButton onClick={() => navigate(-1)} sx={{ mr }}>
           <ArrowBack />
         </IconButton>
         <Box flexGrow={1}>
@@ -238,7 +238,7 @@ const NameRequestDetails: React.FC = () => {
       </Box>
 
       {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ borderBottom, borderColor: 'divider' }}>
         <Tabs 
           value={tabValue} 
           onChange={(e, newValue) => setTabValue(newValue)}
@@ -254,23 +254,23 @@ const NameRequestDetails: React.FC = () => {
       <TabPanel value={tabValue} index={0}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb }}>
               <CardHeader title="Description" />
               <Divider />
-              <CardContent>
-                <Typography>{description || 'No description provided.'}</Typography>
+              
+                {description || 'No description provided.'}</Typography>
               </CardContent>
             </Card>
             <Card>
               <CardHeader title="Business Justification" />
               <Divider />
-              <CardContent>
-                <Typography>{businessJustification || 'No business justification provided.'}</Typography>
+              
+                {businessJustification || 'No business justification provided.'}</Typography>
               </CardContent>
             </Card>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb }}>
               <CardHeader title="Details" />
               <Divider />
               <CardContent>
@@ -292,8 +292,8 @@ const NameRequestDetails: React.FC = () => {
                     <ListItemText 
                       primary="Target Date" 
                       secondary={
-                        <Box>
-                          <Typography>{format(new Date(targetDate), 'MMM d, yyyy')}</Typography>
+                        
+                          {format(new Date(targetDate), 'MMM d, yyyy')}</Typography>
                           <Typography color={daysColor} variant="caption">
                             {daysText}
                           </Typography>
@@ -306,11 +306,11 @@ const NameRequestDetails: React.FC = () => {
                       primary="Requested By" 
                       secondary={
                         <Box display="flex" alignItems="center">
-                          <Avatar src={createdBy?.avatar} sx={{ width: 24, height: 24, mr: 1 }}>
+                          <Avatar src={createdBy?.avatar} sx={{ width, height, mr }}>
                             {createdBy?.name?.charAt(0) || '?'}
                           </Avatar>
-                          <Box>
-                            <Typography>{createdBy?.name || 'Unknown'}</Typography>
+                          
+                            {createdBy?.name || 'Unknown'}</Typography>
                             {createdBy?.email && (
                               <Typography variant="caption" color="textSecondary">
                                 {createdBy.email}
@@ -361,9 +361,9 @@ const NameRequestDetails: React.FC = () => {
         <Card>
           <CardHeader title={`Attachments (${attachments.length})`} />
           <Divider />
-          <CardContent>
+          
             {attachments.length > 0 ? (
-              <List>
+              
                 {attachments.map((file, index) => (
                   <ListItem 
                     key={index}
@@ -382,7 +382,7 @@ const NameRequestDetails: React.FC = () => {
               </List>
             ) : (
               <Box textAlign="center" p={3}>
-                <AttachFile fontSize="large" color="action" sx={{ mb: 2 }} />
+                <AttachFile fontSize="large" color="action" sx={{ mb }} />
                 <Typography>No attachments found</Typography>
               </Box>
             )}

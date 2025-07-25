@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '../app/store';
 import { CircularProgress, Box, Typography } from '@mui/material';
 
-interface PrivateRouteProps {
-  roles?: string[];
-}
-
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ roles }) => {
-  const { isAuthenticated, user, loading } = useSelector((state: RootState) => state.auth);
+const PrivateRoute = ({ roles, children }) => {
+  const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
   const location = useLocation();
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [authorized, setAuthorized] = useState(null);
 
   useEffect(() => {
     if (!loading) {

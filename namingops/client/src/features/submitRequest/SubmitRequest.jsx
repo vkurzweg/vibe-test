@@ -16,16 +16,16 @@ const SubmitRequest: React.FC = () => {
       description: 'Please fill out this form to submit a new name request for review.',
       showProgressBar: 'top',
       showTimerPanel: 'none',
-      firstPageIsStarted: true,
+      firstPageIsStarted,
       startSurveyText: 'Start New Request',
       pageNextText: 'Continue',
       pagePrevText: 'Back',
       completeText: 'Submit Request',
       showNavigationButtons: 'on',
-      pages: [
+      pages
         {
           name: 'start',
-          elements: [
+          elements
             {
               type: 'html',
               html: '<h3>Welcome to the Name Request Form</h3><p>This form will guide you through the process of submitting a new name request. Please have all necessary information ready before you begin.</p>',
@@ -35,19 +35,19 @@ const SubmitRequest: React.FC = () => {
         {
           name: 'request-details',
           title: 'Request Details',
-          elements: [
+          elements
             {
               name: 'requestedName',
               type: 'text',
               title: 'Requested Name',
-              isRequired: true,
+              isRequired,
               placeHolder: 'Enter the name you are requesting',
-              validators: [
+              validators
                 {
                   type: 'text',
-                  minLength: 2,
-                  maxLength: 100,
-                  allowDigits: true,
+                  minLength,
+                  maxLength,
+                  allowDigits,
                 },
               ],
             },
@@ -55,8 +55,8 @@ const SubmitRequest: React.FC = () => {
               name: 'nameType',
               type: 'radiogroup',
               title: 'Name Type',
-              isRequired: true,
-              choices: [
+              isRequired,
+              choices
                 { value: 'descriptive', text: 'Descriptive (clearly describes the product/service)' },
                 { value: 'suggestive', text: 'Suggestive (suggests qualities or benefits)' },
                 { value: 'coined', text: 'Coined (invented word)' },
@@ -69,7 +69,7 @@ const SubmitRequest: React.FC = () => {
               type: 'text',
               title: 'Please specify name type',
               visibleIf: '{nameType} == "other"',
-              isRequired: true,
+              isRequired,
               requiredIf: '{nameType} == "other"',
             },
           ],
@@ -77,13 +77,13 @@ const SubmitRequest: React.FC = () => {
         {
           name: 'asset-information',
           title: 'Asset Information',
-          elements: [
+          elements
             {
               name: 'assetType',
               type: 'dropdown',
               title: 'Type of Asset',
-              isRequired: true,
-              choices: [
+              isRequired,
+              choices
                 { value: 'product', text: 'Product' },
                 { value: 'service', text: 'Service' },
                 { value: 'feature', text: 'Feature' },
@@ -96,20 +96,20 @@ const SubmitRequest: React.FC = () => {
               type: 'text',
               title: 'Please specify asset type',
               visibleIf: '{assetType} == "other"',
-              isRequired: true,
+              isRequired,
               requiredIf: '{assetType} == "other"',
             },
             {
               name: 'assetDescription',
               type: 'comment',
               title: 'Asset Description',
-              isRequired: true,
+              isRequired,
               placeHolder: 'Please provide a detailed description of the asset',
-              validators: [
+              validators
                 {
                   type: 'text',
-                  minLength: 20,
-                  maxLength: 2000,
+                  minLength,
+                  maxLength,
                 },
               ],
             },
@@ -117,7 +117,7 @@ const SubmitRequest: React.FC = () => {
               name: 'targetAudience',
               type: 'comment',
               title: 'Target Audience',
-              isRequired: true,
+              isRequired,
               placeHolder: 'Describe the primary audience for this asset',
             },
           ],
@@ -125,21 +125,21 @@ const SubmitRequest: React.FC = () => {
         {
           name: 'branding',
           title: 'Branding Information',
-          elements: [
+          elements
             {
               name: 'brandGuidelines',
               type: 'checkbox',
               title: 'Brand Guidelines',
               description: 'Please confirm the following brand guidelines have been considered:',
-              isRequired: true,
-              validators: [
+              isRequired,
+              validators
                 {
                   type: 'answercount',
                   text: 'Please select at least one option',
-                  minCount: 1,
+                  minCount,
                 },
               ],
-              choices: [
+              choices
                 { value: 'tone', text: 'Tone of voice guidelines' },
                 { value: 'naming', text: 'Naming conventions' },
                 { value: 'legal', text: 'Legal requirements' },
@@ -150,7 +150,7 @@ const SubmitRequest: React.FC = () => {
               name: 'trademarked',
               type: 'boolean',
               title: 'Is this name already trademarked?',
-              isRequired: true,
+              isRequired,
               labelTrue: 'Yes',
               labelFalse: 'No',
             },
@@ -159,7 +159,7 @@ const SubmitRequest: React.FC = () => {
               type: 'text',
               title: 'Trademark Registration Number',
               visibleIf: '{trademarked} = true',
-              isRequired: true,
+              isRequired,
               requiredIf: '{trademarked} = true',
             },
             {
@@ -167,7 +167,7 @@ const SubmitRequest: React.FC = () => {
               type: 'text',
               title: 'Trademark Office',
               visibleIf: '{trademarked} = true',
-              isRequired: true,
+              isRequired,
               requiredIf: '{trademarked} = true',
             },
           ],
@@ -175,24 +175,24 @@ const SubmitRequest: React.FC = () => {
         {
           name: 'name-analysis',
           title: 'Name Analysis',
-          elements: [
+          elements
             {
               name: 'isCoined',
               type: 'boolean',
               title: 'Is this a coined/made-up word?',
-              isRequired: true,
+              isRequired,
             },
             {
               name: 'isAcronymHeavy',
               type: 'boolean',
               title: 'Does this name contain multiple acronyms or abbreviations?',
-              isRequired: true,
+              isRequired,
             },
             {
               name: 'isConcatenated',
               type: 'boolean',
               title: 'Is this a concatenated name (e.g., Microsoft, Facebook)?',
-              isRequired: true,
+              isRequired,
             },
           ],
         },
@@ -201,7 +201,7 @@ const SubmitRequest: React.FC = () => {
         <div class="text-center">
           <h3>Thank you for your submission!</h3>
           <p>Your name request has been received and is under review. You will receive a confirmation email shortly.</p>
-          <p>Request ID: <strong>{requestId}</strong></p>
+          <p>Request ID: {requestId}</strong></p>
           <p>You can check the status of your request in the dashboard.</p>
         </div>
       `,
@@ -212,9 +212,9 @@ const SubmitRequest: React.FC = () => {
   const survey = useMemo(() => new Model(surveyJson), [surveyJson]););
 
   const handleComplete = useCallback(
-    async (sender: any) => {
+    async (sender) => {
       try {
-        const formData: SubmitRequestFormData = {
+        const formData = {
           ...sender.data,
           submittedBy: user?.id || '',
           status: 'submitted',

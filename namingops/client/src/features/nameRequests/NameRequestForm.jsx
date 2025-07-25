@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { Avatar } from '@mui/material';
+import * from 'yup';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   Box, 
@@ -33,13 +34,13 @@ import {
   Tooltip
 } from '@mui/material';
 import { 
-  ArrowBack as ArrowBackIcon,
-  Save as SaveIcon,
-  Cancel as CancelIcon,
-  CloudUpload as CloudUploadIcon,
-  AttachFile as AttachFileIcon,
-  Delete as DeleteIcon,
-  HelpOutline as HelpOutlineIcon
+  ArrowBack,
+  Save,
+  Cancel,
+  CloudUpload,
+  AttachFile,
+  Delete,
+  HelpOutline
 } from '@mui/icons-material';
 import { AppDispatch, RootState } from '../../app/store';
 import { 
@@ -77,21 +78,19 @@ const validationSchema = Yup.object({
   targetDate: Yup.date()
     .min(new Date(), 'Target date must be in the future')
     .required('Target date is required'),
-  // Add validation for other fields as needed
+  // Add validation for other fields
 });
 
-interface NameRequestFormProps {
-  editMode?: boolean;
-}
 
-const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) => {
-  const dispatch = useDispatch<AppDispatch>();
+
+const NameRequestForm:  = ({ editMode = false }) => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id }>();
   const location = useLocation();
   
-  const { currentRequest, loading, error } = useSelector((state: RootState) => ({
+  const { currentRequest, loading, error } = useSelector((state) => ({
     currentRequest: state.nameRequests.currentRequest,
     loading: state.nameRequests.loading,
     error: state.nameRequests.error
@@ -99,7 +98,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
 
   const [attachments, setAttachments] = useState<File[]>([]);
   const [attachmentPreviews, setAttachmentPreviews] = useState<string[]>([]);
-  const [existingAttachments, setExistingAttachments] = useState<{name: string, url: string}[]>([]);
+  const [existingAttachments, setExistingAttachments] = useState<{name, url>([]);
   const [removedAttachments, setRemovedAttachments] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -134,7 +133,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
         targetDate: currentRequest.targetDate 
           ? new Date(currentRequest.targetDate).toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0],
-        // Set other fields as needed
+        // Set other fields
       });
     }
   }, [currentRequest, editMode]);
@@ -148,9 +147,9 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
       businessJustification: '',
       technicalDetails: '',
       complianceNotes: '',
-      isConfidential: false,
+      isConfidential,
       targetDate: new Date().toISOString().split('T')[0],
-      // Add other initial values as needed
+      // Add other initial values
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -206,7 +205,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
     }
   };
 
-  const handleRemoveAttachment = (index: number) => {
+  const handleRemoveAttachment = (index) => {
     const newAttachments = [...attachments];
     newAttachments.splice(index, 1);
     setAttachments(newAttachments);
@@ -220,7 +219,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
     }
   };
 
-  const handleRemoveExistingAttachment = (index: number, fileName: string) => {
+  const handleRemoveExistingAttachment = (index, fileName) => {
     const newAttachments = [...existingAttachments];
     newAttachments.splice(index, 1);
     setExistingAttachments(newAttachments);
@@ -249,7 +248,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
           variant="contained" 
           color="primary" 
           onClick={() => navigate('/')}
-          sx={{ mt: 2 }}
+          sx={{ mt }}
         >
           Back to Dashboard
         </Button>
@@ -260,7 +259,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
   return (
     <Box>
       <Box mb={3} display="flex" alignItems="center">
-        <IconButton onClick={() => navigate(-1)} sx={{ mr: 1 }}>
+        <IconButton onClick={() => navigate(-1)} sx={{ mr }}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h4" component="h1">
@@ -272,7 +271,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
         <Grid container spacing={3}>
           {/* Left Column */}
           <Grid item xs={12} md={8}>
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb }}>
               <CardHeader 
                 title="Request Details" 
                 subheader="Fill in the basic information about your name request"
@@ -343,7 +342,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                         ))}
                       </Select>
                       {formik.touched.type && formik.errors.type && (
-                        <FormHelperText>{formik.errors.type}</FormHelperText>
+                        {formik.errors.type}</FormHelperText>
                       )}
                     </FormControl>
                   </Grid>
@@ -361,7 +360,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                       helperText={formik.touched.targetDate && formik.errors.targetDate}
                       required
                       InputLabelProps={{
-                        shrink: true,
+                        shrink,
                       }}
                     />
                   </Grid>
@@ -435,13 +434,13 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
             </Card>
 
             {/* Attachments Section */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb }}>
               <CardHeader 
                 title="Attachments" 
                 subheader="Add any supporting documents or images"
               />
               <Divider />
-              <CardContent>
+              
                 {/* Existing Attachments */}
                 {existingAttachments.length > 0 && (
                   <Box mb={3}>
@@ -457,7 +456,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                           onDelete={() => handleRemoveExistingAttachment(index, file.name)}
                           variant="outlined"
                           sx={{ 
-                            maxWidth: 200,
+                            maxWidth,
                             '& .MuiChip-label': {
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -485,7 +484,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                       variant="outlined"
                       component="span"
                       startIcon={<CloudUploadIcon />}
-                      sx={{ mb: 2 }}
+                      sx={{ mb }}
                     >
                       Add Files
                     </Button>
@@ -505,7 +504,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                             onDelete={() => handleRemoveAttachment(index)}
                             variant="outlined"
                             sx={{ 
-                              maxWidth: 200,
+                              maxWidth,
                               '& .MuiChip-label': {
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -528,9 +527,9 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                             key={index} 
                             position="relative"
                             sx={{ 
-                              width: 150, 
-                              height: 150,
-                              borderRadius: 1,
+                              width, 
+                              height,
+                              borderRadius,
                               overflow: 'hidden',
                               border: `1px solid ${theme.palette.divider}`,
                             }}
@@ -550,8 +549,8 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                               onClick={() => handleRemoveAttachment(index)}
                               sx={{
                                 position: 'absolute',
-                                top: 4,
-                                right: 4,
+                                top,
+                                right,
                                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
                                 color: 'white',
                                 '&:hover': {
@@ -574,10 +573,10 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
           {/* Right Column */}
           <Grid item xs={12} md={4}>
             {/* Status & Actions Card */}
-            <Card sx={{ mb: 3 }}>
+            <Card sx={{ mb }}>
               <CardHeader title="Status & Actions" />
               <Divider />
-              <CardContent>
+              
                 {editMode && currentRequest && (
                   <Box mb={3}>
                     <Typography variant="subtitle2" color="textSecondary" gutterBottom>
@@ -593,7 +592,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                           : 'default'
                       }
                       variant="outlined"
-                      sx={{ mb: 2 }}
+                      sx={{ mb }}
                     />
                     
                     {currentRequest.reviewer && (
@@ -604,7 +603,7 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                         <Box display="flex" alignItems="center">
                           <Avatar 
                             src={currentRequest.reviewer.avatar}
-                            sx={{ width: 32, height: 32, mr: 1 }}
+                            sx={{ width, height, mr }}
                           >
                             {currentRequest.reviewer.name.charAt(0)}
                           </Avatar>
@@ -629,9 +628,9 @@ const NameRequestForm: React.FC<NameRequestFormProps> = ({ editMode = false }) =
                     }
                     label={
                       <Box display="flex" alignItems="center">
-                        <Typography>Mark as Confidential</Typography>
+                        <Typography>Mark</Typography>
                         <Tooltip title="Confidential requests will have restricted visibility">
-                          <HelpOutlineIcon fontSize="small" sx={{ ml: 1, color: 'text.secondary' }} />
+                          <HelpOutlineIcon fontSize="small" sx={{ ml, color: 'text.secondary' }} />
                         </Tooltip>
                       </Box>
                     }
