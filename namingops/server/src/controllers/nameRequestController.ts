@@ -1,25 +1,105 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../middleware/errorHandler';
-import NameRequest, { INameRequest } from '../models/NameRequest';
+import NameRequest, { INameRequest, RequestStatus } from '../models/NameRequest';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import fs from 'fs';
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: string;
+        role: string;
+      };
+      files?: Express.Multer.File[];
+    }
+  }
+}
+
+// Ensure uploads directory exists
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+// Helper function to handle file uploads
+const handleFileUpload = (file: Express.Multer.File | undefined): string | null => {
+  if (!file) return null;
+  
+  // Generate unique filename
+  const fileExt = path.extname(file.originalname);
+  const filename = `${uuidv4()}${fileExt}`;
+  const filepath = path.join(UPLOAD_DIR, filename);
+  
+  // Save file to uploads directory
+  fs.writeFileSync(filepath, file.buffer);
+  
+  // Return relative path for storage in DB
+  return `/uploads/${filename}`;
+};
 
 // @desc    Create a new name request
 // @route   POST /api/name-requests
 // @access  Private
 const createNameRequest = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      throw new ApiError('User not authenticated', 401);
+    }
+
+    // Handle file uploads if any
+    const attachments: string[] = [];
+    if (req.files && Array.isArray(req.files)) {
+      for (const file of req.files) {
+        const filePath = handleFileUpload(file);
+        if (filePath) {
+          attachments.push(filePath);
+        }
+      }
+    }
+
+    // Create name request
     const nameRequest = new NameRequest({
       ...req.body,
-      status: 'New',
-      created_at: new Date(),
-      updated_at: new Date()
+      submittedBy: userId,
+      status: 'submitted' as RequestStatus,
+      submittedAt: new Date(),
+      attachments: attachments.length > 0 ? attachments : undefined,
+      // Set default values for optional fields
+      isCoined: Boolean(req.body.isCoined) || false,
+      isAcronymHeavy: Boolean(req.body.isAcronymHeavy) || false,
+      isConcatenated: Boolean(req.body.isConcatenated) || false,
+      trademarked: Boolean(req.body.trademarked) || false,
     });
 
+    // Validate the request
+    const validationError = nameRequest.validateSync();
+    if (validationError) {
+      throw new ApiError(validationError.message, 400);
+    }
+
     await nameRequest.save();
+    
+    // Populate user details for response
+    await nameRequest.populate('submittedBy', 'name email');
+    
     res.status(201).json({
       success: true,
-      data: nameRequest
+      data: nameRequest,
+      message: 'Name request submitted successfully'
     });
   } catch (error) {
+    // Clean up any uploaded files if there was an error
+    if (req.files && Array.isArray(req.files)) {
+      for (const file of req.files as Express.Multer.File[]) {
+        const filePath = path.join(UPLOAD_DIR, file.filename || '');
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+    }
     next(error);
   }
 };
@@ -29,23 +109,59 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
 // @access  Private
 const getNameRequests = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { status, requestor_id } = req.query;
+    const { status, assetType, search, sortBy = 'submittedAt', sortOrder = 'desc' } = req.query;
+    const userId = req.user?.id;
+    const isAdmin = req.user?.role === 'admin' || req.user?.role === 'reviewer';
+    
     const query: any = {};
     
+    // Filter by status if provided
     if (status) {
       query.status = status;
     }
     
-    // If user is not an admin or reviewer, only show their own requests
-    if (requestor_id) {
-      query.requestor_id = requestor_id;
+    // Filter by asset type if provided
+    if (assetType) {
+      query.assetType = assetType;
     }
-
-    const nameRequests = await NameRequest.find(query).sort({ created_at: -1 });
+    
+    // Apply search filter if search term is provided
+    if (search) {
+      query.$text = { $search: search as string };
+    }
+    
+    // If user is not an admin or reviewer, only show their own requests
+    if (!isAdmin) {
+      query.submittedBy = userId;
+    }
+    
+    // Build sort object
+    const sort: any = {};
+    sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
+    
+    // Execute query with pagination
+    const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
+    const limit = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 10;
+    const skip = (page - 1) * limit;
+    
+    const [requests, total] = await Promise.all([
+      NameRequest.find(query)
+        .populate('submittedBy', 'name email')
+        .populate('reviewerId', 'name email')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      NameRequest.countDocuments(query)
+    ]);
+    
     res.status(200).json({
       success: true,
-      count: nameRequests.length,
-      data: nameRequests
+      count: requests.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: requests
     });
   } catch (error) {
     next(error);

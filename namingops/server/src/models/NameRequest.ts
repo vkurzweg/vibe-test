@@ -1,77 +1,188 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
+
+export type NameType = 'descriptive' | 'suggestive' | 'coined' | 'acronym' | 'other';
+export type AssetType = 'product' | 'service' | 'feature' | 'initiative' | 'other';
+export type RequestStatus = 'draft' | 'submitted' | 'in_review' | 'approved' | 'rejected' | 'changes_requested';
 
 export interface INameRequest extends Document {
-  request_title: string;
-  requestor_name: string;
-  requestor_id: number;
-  requestor_email: string;
-  business_unit: string;
-  asset_type: 'Product' | 'Platform' | 'Feature' | 'Internal Tool' | 'Program' | 'Initiative' | 'Solution' | 'Other';
-  asset_type_specify: string;
-  asset_description: string;
-  proposed_name_1: string;
-  proposed_name_2: string;
-  monetized: boolean;
-  rename: boolean;
+  // Request Information
+  requestedName: string;
+  nameType: NameType;
+  nameTypeOther?: string;
+  
+  // Asset Information
+  assetType: AssetType;
+  assetTypeOther?: string;
+  assetDescription: string;
+  targetAudience: string;
+  
+  // Branding
+  brandGuidelines: string[];
   trademarked: boolean;
-  trademark_region: string;
-  file_attachment: string;
-  status: 'New' | 'In Progress' | 'Legal Review' | 'On Hold' | 'Cancelled' | 'Approved';
-  reviewer_name: 'JK' | 'VK' | 'JH';
-  reviewer_notes: string;
-  final_approved_name: string;
-  updated_description: string;
-  trademark_details: string;
-  approval_notes: string;
-  approval_date: Date;
-  created_at: Date;
-  updated_at: Date;
+  trademarkNumber?: string;
+  trademarkOffice?: string;
+  
+  // Name Analysis
+  isCoined: boolean;
+  isAcronymHeavy: boolean;
+  isConcatenated: boolean;
+  
+  // Status and Metadata
+  status: RequestStatus;
+  submittedBy: Types.ObjectId;
+  submittedAt: Date;
+  updatedAt: Date;
+  
+  // Additional Fields
+  comments?: string;
+  attachments?: string[];
+  
+  // Review Information
+  reviewerNotes?: string;
+  reviewerId?: Types.ObjectId;
+  reviewedAt?: Date;
+  
+  // System Fields
+  isActive: boolean;
+  version: number;
 }
 
 const NameRequestSchema: Schema = new Schema({
-  request_title: { type: String, required: true },
-  requestor_name: { type: String, required: true },
-  requestor_id: { type: Number, required: true },
-  requestor_email: { type: String, required: true, lowercase: true, trim: true },
-  business_unit: { type: String, required: true },
-  asset_type: {
-    type: String,
-    enum: ['Product', 'Platform', 'Feature', 'Internal Tool', 'Program', 'Initiative', 'Solution', 'Other'],
-    required: true
+  // Request Information
+  requestedName: { 
+    type: String, 
+    required: [true, 'Requested name is required'],
+    trim: true,
+    minlength: [2, 'Name must be at least 2 characters long'],
+    maxlength: [100, 'Name cannot exceed 100 characters']
   },
-  asset_type_specify: { type: String, default: '' },
-  asset_description: { type: String, required: true },
-  proposed_name_1: { type: String, required: true },
-  proposed_name_2: { type: String, default: '' },
-  monetized: { type: Boolean, default: false },
-  rename: { type: Boolean, default: false },
-  trademarked: { type: Boolean, default: false },
-  trademark_region: { type: String, default: '' },
-  file_attachment: { type: String, default: '' },
-  status: {
-    type: String,
-    enum: ['New', 'In Progress', 'Legal Review', 'On Hold', 'Cancelled', 'Approved'],
-    default: 'New'
+  nameType: { 
+    type: String, 
+    enum: ['descriptive', 'suggestive', 'coined', 'acronym', 'other'],
+    required: [true, 'Name type is required']
   },
-  reviewer_name: {
+  nameTypeOther: { 
     type: String,
-    enum: ['JK', 'VK', 'JH'],
-    required: true
+    required: [
+      function(this: INameRequest) { return this.nameType === 'other'; },
+      'Please specify the name type'
+    ]
   },
-  reviewer_notes: { type: String, default: '' },
-  final_approved_name: { type: String, default: '' },
-  updated_description: { type: String, default: '' },
-  trademark_details: { type: String, default: '' },
-  approval_notes: { type: String, default: '' },
-  approval_date: { type: Date },
-  created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  
+  // Asset Information
+  assetType: { 
+    type: String, 
+    enum: ['product', 'service', 'feature', 'initiative', 'other'],
+    required: [true, 'Asset type is required']
+  },
+  assetTypeOther: { 
+    type: String,
+    required: [
+      function(this: INameRequest) { return this.assetType === 'other'; },
+      'Please specify the asset type'
+    ]
+  },
+  assetDescription: { 
+    type: String, 
+    required: [true, 'Asset description is required'],
+    minlength: [20, 'Description must be at least 20 characters long']
+  },
+  targetAudience: { 
+    type: String, 
+    required: [true, 'Target audience is required']
+  },
+  
+  // Branding
+  brandGuidelines: [{
+    type: String,
+    enum: ['tone', 'naming', 'legal', 'accessibility'],
+    required: [true, 'At least one brand guideline must be selected']
+  }],
+  trademarked: { 
+    type: Boolean, 
+    default: false 
+  },
+  trademarkNumber: { 
+    type: String,
+    required: [
+      function(this: INameRequest) { return this.trademarked === true; },
+      'Trademark number is required for trademarked names'
+    ]
+  },
+  trademarkOffice: { 
+    type: String,
+    required: [
+      function(this: INameRequest) { return this.trademarked === true; },
+      'Trademark office is required for trademarked names'
+    ]
+  },
+  
+  // Name Analysis
+  isCoined: { type: Boolean, default: false },
+  isAcronymHeavy: { type: Boolean, default: false },
+  isConcatenated: { type: Boolean, default: false },
+  
+  // Status and Metadata
+  status: { 
+    type: String, 
+    enum: ['draft', 'submitted', 'in_review', 'approved', 'rejected', 'changes_requested'],
+    default: 'draft'
+  },
+  submittedBy: { 
+    type: Schema.Types.ObjectId, 
+    ref: 'User',
+    required: true 
+  },
+  submittedAt: { 
+    type: Date, 
+    default: Date.now 
+  },
+  
+  // Additional Fields
+  comments: { type: String },
+  attachments: [{ type: String }],
+  
+  // Review Information
+  reviewerNotes: { type: String },
+  reviewerId: { type: Schema.Types.ObjectId, ref: 'User' },
+  reviewedAt: { type: Date },
+  
+  // System Fields
+  isActive: { type: Boolean, default: true },
+  version: { type: Number, default: 1 }
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-// Update the updated_at timestamp before saving
-NameRequestSchema.pre<INameRequest>('save', function(next) {
-  this.updated_at = new Date();
-  next();
-});
+// Add indexes for frequently queried fields
+NameRequestSchema.index({ requestedName: 1 });
+NameRequestSchema.index({ status: 1 });
+NameRequestSchema.index({ submittedBy: 1 });
+NameRequestSchema.index({ assetType: 1 });
+NameRequestSchema.index({ trademarked: 1 });
+NameRequestSchema.index({ createdAt: -1 });
+
+// Add text index for search functionality
+NameRequestSchema.index(
+  { 
+    requestedName: 'text',
+    assetDescription: 'text',
+    targetAudience: 'text',
+    comments: 'text',
+    reviewerNotes: 'text'
+  },
+  {
+    weights: {
+      requestedName: 10,
+      assetDescription: 5,
+      targetAudience: 3,
+      comments: 2,
+      reviewerNotes: 1
+    },
+    name: 'text_search_index'
+  }
+);
 
 export default mongoose.model<INameRequest>('NameRequest', NameRequestSchema);
