@@ -4,45 +4,64 @@ import NameRequest, { INameRequest, RequestStatus } from '../models/NameRequest'
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs';
+import { promisify } from 'util';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-      };
-      files?: Express.Multer.File[];
-    }
-  }
-}
+const unlinkAsync = promisify(fs.unlink);
+
+// Define the upload directory
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
 // Ensure uploads directory exists
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
 // Helper function to handle file uploads
-const handleFileUpload = (file: Express.Multer.File | undefined): string | null => {
+const handleFileUpload = async (file: Express.Multer.File): Promise<string | null> => {
   if (!file) return null;
   
-  // Generate unique filename
-  const fileExt = path.extname(file.originalname);
-  const filename = `${uuidv4()}${fileExt}`;
-  const filepath = path.join(UPLOAD_DIR, filename);
-  
-  // Save file to uploads directory
-  fs.writeFileSync(filepath, file.buffer);
-  
-  // Return relative path for storage in DB
-  return `/uploads/${filename}`;
+  try {
+    // Generate unique filename
+    const fileExt = path.extname(file.originalname);
+    const filename = `${uuidv4()}${fileExt}`;
+    const filepath = path.join(UPLOAD_DIR, filename);
+    
+    // Ensure the upload directory exists
+    if (!fs.existsSync(UPLOAD_DIR)) {
+      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    }
+    
+    // Save file to uploads directory
+    await fs.promises.writeFile(filepath, file.buffer);
+    
+    // Return relative path for storage in DB
+    return `/uploads/${filename}`;
+  } catch (error) {
+    console.error('Error handling file upload:', error);
+    return null;
+  }
+};
+
+// Helper function to clean up uploaded files
+const cleanupFiles = async (files: Express.Multer.File[] = []) => {
+  const cleanupPromises = files.map(async (file) => {
+    if (file.path && fs.existsSync(file.path)) {
+      try {
+        await unlinkAsync(file.path);
+      } catch (error) {
+        console.error(`Error deleting file ${file.path}:`, error);
+      }
+    }
+  });
+  await Promise.all(cleanupPromises);
 };
 
 // @desc    Create a new name request
 // @route   POST /api/name-requests
 // @access  Private
 const createNameRequest = async (req: Request, res: Response, next: NextFunction) => {
+  const files = Array.isArray(req.files) ? req.files : [];
+  
   try {
     const userId = req.user?.id;
     if (!userId) {
@@ -51,12 +70,15 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
 
     // Handle file uploads if any
     const attachments: string[] = [];
-    if (req.files && Array.isArray(req.files)) {
-      for (const file of req.files) {
-        const filePath = handleFileUpload(file);
+    for (const file of files) {
+      try {
+        const filePath = await handleFileUpload(file);
         if (filePath) {
           attachments.push(filePath);
         }
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        // Continue with other files even if one fails
       }
     }
 
@@ -77,10 +99,15 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
     // Validate the request
     const validationError = nameRequest.validateSync();
     if (validationError) {
+      // Clean up uploaded files if validation fails
+      await cleanupFiles(files);
       throw new ApiError(validationError.message, 400);
     }
 
     await nameRequest.save();
+    
+    // Clean up temporary files after successful save
+    await cleanupFiles(files);
     
     // Populate user details for response
     await nameRequest.populate('submittedBy', 'name email');
@@ -92,14 +119,7 @@ const createNameRequest = async (req: Request, res: Response, next: NextFunction
     });
   } catch (error) {
     // Clean up any uploaded files if there was an error
-    if (req.files && Array.isArray(req.files)) {
-      for (const file of req.files as Express.Multer.File[]) {
-        const filePath = path.join(UPLOAD_DIR, file.filename || '');
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      }
-    }
+    await cleanupFiles(files);
     next(error);
   }
 };
@@ -131,13 +151,15 @@ const getNameRequests = async (req: Request, res: Response, next: NextFunction) 
     }
     
     // If user is not an admin or reviewer, only show their own requests
-    if (!isAdmin) {
+    if (!isAdmin && userId) {
       query.submittedBy = userId;
     }
     
     // Build sort object
     const sort: any = {};
-    sort[sortBy as string] = sortOrder === 'asc' ? 1 : -1;
+    const sortField = typeof sortBy === 'string' ? sortBy : 'submittedAt';
+    const sortDirection = sortOrder === 'asc' ? 1 : -1;
+    sort[sortField] = sortDirection;
     
     // Execute query with pagination
     const page = typeof req.query.page === 'string' ? parseInt(req.query.page, 10) : 1;
